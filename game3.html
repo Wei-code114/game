@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&display=swap" rel="stylesheet">
+
+<title>Mini Game</title>
+
+<style>
+body {
+    font-family: 'Baloo 2', 'Comic Sans MS', cursive;
+    background: #66B3FF;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.container {
+    text-align: center;
+    width: 90%;
+    max-width: 900px;
+}
+
+h1 {
+    color: white;
+    font-size: 48px;
+}
+
+/* UI */
+.label-box, .button-box, .input-box {
+    background: #FFCCE5;
+    padding: 15px 20px;
+    border-radius: 40px;
+    display: inline-block;
+    font-size: 24px;
+    margin: 15px;
+    min-width: 200px;
+    font-weight: bold;
+}
+
+#inputNum {
+    width: 250px;
+    height: 60px;
+    font-size: 24px;
+    text-align: center;
+    border-radius: 20px;
+    border: none;
+    outline: none;
+    background: #eee;
+    margin-top: 15px;
+}
+
+.input-box {
+    display: block;
+    padding: 30px;
+    border-radius: 40px;
+}
+
+button {
+    padding: 15px 30px;
+    font-size: 22px;
+    border-radius: 40px;
+    border: none;
+    background: #FFB6C1;
+    cursor: pointer;
+    margin: 10px;
+    font-weight: bold;
+}
+
+.restart {
+    background: #FFC14D;
+}
+
+.message {
+    color: white;
+    font-size: 26px;
+    margin-top: 20px;
+}
+
+.hidden { display: none; }
+
+/* ===== 翻卡遊戲 ===== */
+#board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    max-width: 500px;
+    margin: 20px auto;
+}
+
+.card {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #FFCCE5;
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<!-- ===== MENU ===== -->
+<div id="menu">
+    <h1>🎮 GAME MENU</h1>
+    <div class="button-box"><button onclick="showGame('guess')">猜數字</button></div>
+    <div class="button-box"><button onclick="showGame('rps')">剪刀石頭布</button></div>
+    <div class="button-box"><button onclick="showGame('memory')">翻卡遊戲</button></div>
+</div>
+
+<!-- ===== 猜數字（完全沒動） ===== -->
+<div id="guessGame" class="hidden">
+    <h1>GUESS NUMBER</h1>
+
+    <div>
+        <div class="label-box">NUM : 1-100</div>
+        <div class="label-box">TIMES : <span id="timesBox">0</span></div>
+    </div>
+
+    <div class="input-box">
+        <div>ENTER YOUR GUESS :</div>
+        <input type="number" id="inputNum">
+    </div>
+
+    <div>
+        <div class="button-box"><button onclick="checkGuess()">GUESS</button></div>
+        <div class="button-box"><button class="restart" onclick="restartGuess()">RESTART</button></div>
+        <div class="button-box"><button onclick="backMenu()">返回</button></div>
+    </div>
+
+    <div class="message" id="guessMsg"></div>
+    <div class="message">YOU CAN DO IT!</div>
+</div>
+
+<!-- ===== 剪刀石頭布（已修正🔥） ===== -->
+<div id="rpsGame" class="hidden">
+    <h1>剪刀石頭布</h1>
+
+    <div class="label-box">勝: <span id="win">0</span></div>
+    <div class="label-box">輸: <span id="lose">0</span></div>
+    <div class="label-box">平: <span id="draw">0</span></div>
+
+    <div>
+        <button onclick="playRPS('剪刀')">✂</button>
+        <button onclick="playRPS('石頭')">🪨</button>
+        <button onclick="playRPS('布')">📄</button>
+    </div>
+
+    <!-- 🔥 新增 -->
+    <button class="restart" onclick="resetRPS()">重新開始</button>
+
+    <button onclick="backMenu()">返回</button>
+
+    <div class="message" id="rpsMsg"></div>
+</div>
+
+<!-- ===== 翻卡遊戲（完全沒動） ===== -->
+<div id="memoryGame" class="hidden">
+    <h1>翻卡遊戲</h1>
+
+    <div class="label-box">翻牌次數: <span id="flipCount">0</span></div>
+
+    <div id="board"></div>
+
+    <div>
+        <button class="restart" onclick="startMemory()">重新開始</button>
+        <button onclick="backMenu()">返回</button>
+    </div>
+
+    <div class="message" id="memoryMsg"></div>
+</div>
+
+</div>
+
+<script>
+
+// ===== 切換 =====
+function showGame(g) {
+    document.getElementById("menu").classList.add("hidden");
+    document.getElementById("guessGame").classList.add("hidden");
+    document.getElementById("rpsGame").classList.add("hidden");
+    document.getElementById("memoryGame").classList.add("hidden");
+
+    if (g === "guess") document.getElementById("guessGame").classList.remove("hidden");
+    if (g === "rps") document.getElementById("rpsGame").classList.remove("hidden");
+    if (g === "memory") {
+        document.getElementById("memoryGame").classList.remove("hidden");
+        startMemory();
+    }
+}
+
+function backMenu() {
+    document.getElementById("menu").classList.remove("hidden");
+    document.getElementById("guessGame").classList.add("hidden");
+    document.getElementById("rpsGame").classList.add("hidden");
+    document.getElementById("memoryGame").classList.add("hidden");
+
+    // 🔥 回去自動歸零
+    resetRPS();
+}
+
+// ===== 猜數字（沒動） =====
+let num = Math.floor(Math.random() * 100) + 1;
+let times = 0;
+
+function checkGuess() {
+    const val = parseInt(document.getElementById("inputNum").value);
+    const msg = document.getElementById("guessMsg");
+
+    if (isNaN(val)) {
+        msg.textContent = "請輸入數字";
+        return;
+    }
+
+    times++;
+    document.getElementById("timesBox").textContent = times;
+
+    if (val > num) msg.textContent = "太大了！";
+    else if (val < num) msg.textContent = "太小了！";
+    else msg.textContent = "答對了！🎉";
+}
+
+function restartGuess() {
+    num = Math.floor(Math.random() * 100) + 1;
+    times = 0;
+    document.getElementById("timesBox").textContent = 0;
+    document.getElementById("guessMsg").textContent = "";
+    document.getElementById("inputNum").value = "";
+}
+
+// ===== RPS（修正區🔥） =====
+let win=0, lose=0, draw=0;
+
+function playRPS(p) {
+    let arr=["剪刀","石頭","布"];
+    let c=arr[Math.floor(Math.random()*3)];
+    let msg=document.getElementById("rpsMsg");
+
+    if(p===c){
+        draw++; document.getElementById("draw").textContent=draw;
+        msg.textContent=`平手 🤝 ${p} vs ${c}`;
+    } else if (
+        (p==="剪刀"&&c==="布")||
+        (p==="石頭"&&c==="剪刀")||
+        (p==="布"&&c==="石頭")
+    ){
+        win++; document.getElementById("win").textContent=win;
+        msg.textContent=`你贏 🎉 ${p} vs ${c}`;
+    } else {
+        lose++; document.getElementById("lose").textContent=lose;
+        msg.textContent=`你輸 😢 ${p} vs ${c}`;
+    }
+}
+
+// 🔥 重置功能
+function resetRPS() {
+    win = 0;
+    lose = 0;
+    draw = 0;
+
+    document.getElementById("win").textContent = 0;
+    document.getElementById("lose").textContent = 0;
+    document.getElementById("draw").textContent = 0;
+
+    document.getElementById("rpsMsg").textContent = "";
+}
+
+// ===== 翻卡（沒動） =====
+let cards, first, second, lock=false, flips=0, matched=0;
+
+function startMemory() {
+    cards=["🍎","🍎","🐶","🐶","🚗","🚗","🎈","🎈"];
+    cards.sort(()=>Math.random()-0.5);
+
+    const board=document.getElementById("board");
+    board.innerHTML="";
+    flips=0; matched=0;
+    document.getElementById("flipCount").textContent=0;
+    document.getElementById("memoryMsg").textContent="";
+
+    cards.forEach(v=>{
+        let div=document.createElement("div");
+        div.className="card";
+        div.dataset.value=v;
+        div.innerHTML="?";
+        div.onclick=flipCard;
+        board.appendChild(div);
+    });
+}
+
+function flipCard() {
+    if(lock || this.innerHTML!=="?") return;
+
+    this.innerHTML=this.dataset.value;
+
+    if(!first){
+        first=this;
+    } else {
+        second=this;
+        flips++;
+        document.getElementById("flipCount").textContent=flips;
+
+        if(first.dataset.value===second.dataset.value){
+            matched+=2;
+            first=null; second=null;
+
+            if(matched===cards.length){
+                document.getElementById("memoryMsg").textContent="完成 🎉";
+            }
+        } else {
+            lock=true;
+            setTimeout(()=>{
+                first.innerHTML="?";
+                second.innerHTML="?";
+                first=null; second=null;
+                lock=false;
+            },1200);
+        }
+    }
+}
+
+</script>
+
+</body>
+</html>
