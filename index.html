@@ -11,30 +11,79 @@
     <section class="hero">
       <p class="hero__eyebrow">MINI GAME HUB</p>
       <h1>小遊戲樂園</h1>
-
     </section>
     <section id="menu" class="view view--active">
-      <div class="game-grid">
-        <button class="game-card" type="button" data-open="guess">
-          <span class="game-card__icon">🔢</span>
-          <strong>猜數字</strong>
-          <span>1 到 100，看看幾次猜中。</span>
-        </button>
-        <button class="game-card" type="button" data-open="rps">
-          <span class="game-card__icon">✂️</span>
-          <strong>剪刀石頭布</strong>
-          <span>快速一局，累積勝負平。</span>
-        </button>
-        <button class="game-card" type="button" data-open="memory">
-          <span class="game-card__icon">🃏</span>
-          <strong>翻卡遊戲</strong>
-          <span>翻出相同圖案，完成配對。</span>
-        </button>
-        <button class="game-card" type="button" data-open="snake">
-          <span class="game-card__icon">🐍</span>
-          <strong>貪吃蛇</strong>
-          <span>吃食物、變長、別撞牆。</span>
-        </button>
+      <div class="menu-layout">
+        <section class="panel">
+          <div class="game-grid">
+            <button class="game-card" type="button" data-open="guess">
+              <span class="game-card__icon">🔢</span>
+              <strong>猜數字</strong>
+              <span>1 到 100，看看幾次猜中。</span>
+            </button>
+            <button class="game-card" type="button" data-open="rps">
+              <span class="game-card__icon">✂️</span>
+              <strong>剪刀石頭布</strong>
+              <span>快速一局，累積勝負平。</span>
+            </button>
+            <button class="game-card" type="button" data-open="memory">
+              <span class="game-card__icon">🃏</span>
+              <strong>翻卡遊戲</strong>
+              <span>翻出相同圖案，完成配對。</span>
+            </button>
+            <button class="game-card" type="button" data-open="snake">
+              <span class="game-card__icon">🐍</span>
+              <strong>貪吃蛇</strong>
+              <span>吃食物、變長、別撞牆。</span>
+            </button>
+          </div>
+        </section>
+
+        <aside class="panel panel--side" aria-label="最佳紀錄">
+          <div class="leaderboard">
+            <article class="stat-card leaderboard-card">
+              <span class="stat-card__label">最佳紀錄</span>
+              <div class="leaderboard-rows" role="table" aria-label="最佳紀錄表">
+                <div class="leaderboard-row" role="row">
+                  <span class="leaderboard-row__label" role="cell">猜數字</span>
+                  <strong id="best-guess" class="leaderboard-row__value" role="cell">-</strong>
+                  <span class="leaderboard-row__holder" role="cell">
+                    <span class="leaderboard-row__holder-label">保持人</span>
+                    <span id="best-guess-name">-</span>
+                  </span>
+                </div>
+                <div class="leaderboard-row" role="row">
+                  <span class="leaderboard-row__label" role="cell">剪刀石頭布</span>
+                  <strong id="best-rps" class="leaderboard-row__value" role="cell">-</strong>
+                  <span class="leaderboard-row__holder" role="cell">
+                    <span class="leaderboard-row__holder-label">保持人</span>
+                    <span id="best-rps-name">-</span>
+                  </span>
+                </div>
+                <div class="leaderboard-row" role="row">
+                  <span class="leaderboard-row__label" role="cell">翻卡</span>
+                  <strong id="best-memory" class="leaderboard-row__value" role="cell">-</strong>
+                  <span class="leaderboard-row__holder" role="cell">
+                    <span class="leaderboard-row__holder-label">保持人</span>
+                    <span id="best-memory-name">-</span>
+                  </span>
+                </div>
+                <div class="leaderboard-row" role="row">
+                  <span class="leaderboard-row__label" role="cell">貪吃蛇</span>
+                  <strong id="best-snake" class="leaderboard-row__value" role="cell">-</strong>
+                  <span class="leaderboard-row__holder" role="cell">
+                    <span class="leaderboard-row__holder-label">保持人</span>
+                    <span id="best-snake-name">-</span>
+                  </span>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <div class="action-row action-row--home">
+            <button id="reset-records" class="button button--ghost" type="button">清除最佳紀錄</button>
+          </div>
+        </aside>
       </div>
     </section>
     <section id="guess-view" class="view panel">
@@ -159,6 +208,24 @@
       </div>
     </section>
   </main>
+  <div id="nickname-modal" class="modal modal--hidden" role="dialog" aria-modal="true" aria-labelledby="nickname-modal-title">
+    <div class="modal__backdrop" data-close-modal></div>
+    <div class="modal__panel">
+      <p class="panel__eyebrow">NEW RECORD</p>
+      <h2 id="nickname-modal-title" class="modal__title">破紀錄</h2>
+      <p id="nickname-modal-subtitle" class="modal__subtitle"></p>
+
+      <label class="input-panel input-panel--compact" for="nickname-modal-input">
+        <span>請輸入暱稱（必填）</span>
+        <input id="nickname-modal-input" type="text" maxlength="18" placeholder="例如 Wei">
+      </label>
+
+      <div class="action-row action-row--modal">
+        <button id="nickname-modal-cancel" class="button button--ghost" type="button">先不要</button>
+        <button id="nickname-modal-save" class="button button--accent" type="button">保存紀錄</button>
+      </div>
+    </div>
+  </div>
   <script src="./hub.js"></script>
 </body>
 </html>
