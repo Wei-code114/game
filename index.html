@@ -1,333 +1,164 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&display=swap" rel="stylesheet">
-
-<title>Mini Game</title>
-
-<style>
-body {
-    font-family: 'Baloo 2', 'Comic Sans MS', cursive;
-    background: #66B3FF;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-}
-
-.container {
-    text-align: center;
-    width: 90%;
-    max-width: 900px;
-}
-
-h1 {
-    color: white;
-    font-size: 48px;
-}
-
-/* UI */
-.label-box, .button-box, .input-box {
-    background: #FFCCE5;
-    padding: 15px 20px;
-    border-radius: 40px;
-    display: inline-block;
-    font-size: 24px;
-    margin: 15px;
-    min-width: 200px;
-    font-weight: bold;
-}
-
-#inputNum {
-    width: 250px;
-    height: 60px;
-    font-size: 24px;
-    text-align: center;
-    border-radius: 20px;
-    border: none;
-    outline: none;
-    background: #eee;
-    margin-top: 15px;
-}
-
-.input-box {
-    display: block;
-    padding: 30px;
-    border-radius: 40px;
-}
-
-button {
-    padding: 15px 30px;
-    font-size: 22px;
-    border-radius: 40px;
-    border: none;
-    background: #FFB6C1;
-    cursor: pointer;
-    margin: 10px;
-    font-weight: bold;
-}
-
-.restart {
-    background: #FFC14D;
-}
-
-.message {
-    color: white;
-    font-size: 26px;
-    margin-top: 20px;
-}
-
-.hidden { display: none; }
-
-/* ===== 翻卡遊戲 ===== */
-#board {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    max-width: 500px;
-    margin: 20px auto;
-}
-
-.card {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    background: #FFCCE5;
-    border-radius: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 32px;
-    cursor: pointer;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini Game Hub</title>
+  <link rel="stylesheet" href="./hub.css">
 </head>
-
 <body>
-<div class="container">
-
-<!-- ===== MENU ===== -->
-<div id="menu">
-    <h1>🎮 GAME MENU</h1>
-    <div class="button-box"><button onclick="showGame('guess')">猜數字</button></div>
-    <div class="button-box"><button onclick="showGame('rps')">剪刀石頭布</button></div>
-    <div class="button-box"><button onclick="showGame('memory')">翻卡遊戲</button></div>
-</div>
-
-<!-- ===== 猜數字（完全沒動） ===== -->
-<div id="guessGame" class="hidden">
-    <h1>GUESS NUMBER</h1>
-
-    <div>
-        <div class="label-box">NUM : 1-100</div>
-        <div class="label-box">TIMES : <span id="timesBox">0</span></div>
-    </div>
-
-    <div class="input-box">
-        <div>ENTER YOUR GUESS :</div>
-        <input type="number" id="inputNum">
-    </div>
-
-    <div>
-        <div class="button-box"><button onclick="checkGuess()">GUESS</button></div>
-        <div class="button-box"><button class="restart" onclick="restartGuess()">RESTART</button></div>
-        <div class="button-box"><button onclick="backMenu()">返回</button></div>
-    </div>
-
-    <div class="message" id="guessMsg"></div>
-    <div class="message">YOU CAN DO IT!</div>
-</div>
-
-<!-- ===== 剪刀石頭布（已修正🔥） ===== -->
-<div id="rpsGame" class="hidden">
-    <h1>剪刀石頭布</h1>
-
-    <div class="label-box">勝: <span id="win">0</span></div>
-    <div class="label-box">輸: <span id="lose">0</span></div>
-    <div class="label-box">平: <span id="draw">0</span></div>
-
-    <div>
-        <button onclick="playRPS('剪刀')">✂</button>
-        <button onclick="playRPS('石頭')">🪨</button>
-        <button onclick="playRPS('布')">📄</button>
-    </div>
-
-    <!-- 🔥 新增 -->
-    <button class="restart" onclick="resetRPS()">重新開始</button>
-
-    <button onclick="backMenu()">返回</button>
-
-    <div class="message" id="rpsMsg"></div>
-</div>
-
-<!-- ===== 翻卡遊戲（完全沒動） ===== -->
-<div id="memoryGame" class="hidden">
-    <h1>翻卡遊戲</h1>
-
-    <div class="label-box">翻牌次數: <span id="flipCount">0</span></div>
-
-    <div id="board"></div>
-
-    <div>
-        <button class="restart" onclick="startMemory()">重新開始</button>
-        <button onclick="backMenu()">返回</button>
-    </div>
-
-    <div class="message" id="memoryMsg"></div>
-</div>
-
-</div>
-
-<script>
-
-// ===== 切換 =====
-function showGame(g) {
-    document.getElementById("menu").classList.add("hidden");
-    document.getElementById("guessGame").classList.add("hidden");
-    document.getElementById("rpsGame").classList.add("hidden");
-    document.getElementById("memoryGame").classList.add("hidden");
-
-    if (g === "guess") document.getElementById("guessGame").classList.remove("hidden");
-    if (g === "rps") document.getElementById("rpsGame").classList.remove("hidden");
-    if (g === "memory") {
-        document.getElementById("memoryGame").classList.remove("hidden");
-        startMemory();
-    }
-}
-
-function backMenu() {
-    document.getElementById("menu").classList.remove("hidden");
-    document.getElementById("guessGame").classList.add("hidden");
-    document.getElementById("rpsGame").classList.add("hidden");
-    document.getElementById("memoryGame").classList.add("hidden");
-
-    // 🔥 回去自動歸零
-    resetRPS();
-}
-
-// ===== 猜數字（沒動） =====
-let num = Math.floor(Math.random() * 100) + 1;
-let times = 0;
-
-function checkGuess() {
-    const val = parseInt(document.getElementById("inputNum").value);
-    const msg = document.getElementById("guessMsg");
-
-    if (isNaN(val)) {
-        msg.textContent = "請輸入數字";
-        return;
-    }
-
-    times++;
-    document.getElementById("timesBox").textContent = times;
-
-    if (val > num) msg.textContent = "太大了！";
-    else if (val < num) msg.textContent = "太小了！";
-    else msg.textContent = "答對了！🎉";
-}
-
-function restartGuess() {
-    num = Math.floor(Math.random() * 100) + 1;
-    times = 0;
-    document.getElementById("timesBox").textContent = 0;
-    document.getElementById("guessMsg").textContent = "";
-    document.getElementById("inputNum").value = "";
-}
-
-// ===== RPS（修正區🔥） =====
-let win=0, lose=0, draw=0;
-
-function playRPS(p) {
-    let arr=["剪刀","石頭","布"];
-    let c=arr[Math.floor(Math.random()*3)];
-    let msg=document.getElementById("rpsMsg");
-
-    if(p===c){
-        draw++; document.getElementById("draw").textContent=draw;
-        msg.textContent=`平手 🤝 ${p} vs ${c}`;
-    } else if (
-        (p==="剪刀"&&c==="布")||
-        (p==="石頭"&&c==="剪刀")||
-        (p==="布"&&c==="石頭")
-    ){
-        win++; document.getElementById("win").textContent=win;
-        msg.textContent=`你贏 🎉 ${p} vs ${c}`;
-    } else {
-        lose++; document.getElementById("lose").textContent=lose;
-        msg.textContent=`你輸 😢 ${p} vs ${c}`;
-    }
-}
-
-// 🔥 重置功能
-function resetRPS() {
-    win = 0;
-    lose = 0;
-    draw = 0;
-
-    document.getElementById("win").textContent = 0;
-    document.getElementById("lose").textContent = 0;
-    document.getElementById("draw").textContent = 0;
-
-    document.getElementById("rpsMsg").textContent = "";
-}
-
-// ===== 翻卡（沒動） =====
-let cards, first, second, lock=false, flips=0, matched=0;
-
-function startMemory() {
-    cards=["🍎","🍎","🐶","🐶","🚗","🚗","🎈","🎈"];
-    cards.sort(()=>Math.random()-0.5);
-
-    const board=document.getElementById("board");
-    board.innerHTML="";
-    flips=0; matched=0;
-    document.getElementById("flipCount").textContent=0;
-    document.getElementById("memoryMsg").textContent="";
-
-    cards.forEach(v=>{
-        let div=document.createElement("div");
-        div.className="card";
-        div.dataset.value=v;
-        div.innerHTML="?";
-        div.onclick=flipCard;
-        board.appendChild(div);
-    });
-}
-
-function flipCard() {
-    if(lock || this.innerHTML!=="?") return;
-
-    this.innerHTML=this.dataset.value;
-
-    if(!first){
-        first=this;
-    } else {
-        second=this;
-        flips++;
-        document.getElementById("flipCount").textContent=flips;
-
-        if(first.dataset.value===second.dataset.value){
-            matched+=2;
-            first=null; second=null;
-
-            if(matched===cards.length){
-                document.getElementById("memoryMsg").textContent="完成 🎉";
-            }
-        } else {
-            lock=true;
-            setTimeout(()=>{
-                first.innerHTML="?";
-                second.innerHTML="?";
-                first=null; second=null;
-                lock=false;
-            },1200);
-        }
-    }
-}
-
-</script>
-
+  <main class="shell">
+    <section class="hero">
+      <p class="hero__eyebrow">MINI GAME HUB</p>
+      <h1>小遊戲樂園</h1>
+      <p class="hero__text">把猜數字、剪刀石頭布、翻卡和貪吃蛇收進同一個可直接開啟的網頁。</p>
+    </section>
+    <section id="menu" class="view view--active">
+      <div class="game-grid">
+        <button class="game-card" type="button" data-open="guess">
+          <span class="game-card__icon">🔢</span>
+          <strong>猜數字</strong>
+          <span>1 到 100，看看幾次猜中。</span>
+        </button>
+        <button class="game-card" type="button" data-open="rps">
+          <span class="game-card__icon">✂️</span>
+          <strong>剪刀石頭布</strong>
+          <span>快速一局，累積勝負平。</span>
+        </button>
+        <button class="game-card" type="button" data-open="memory">
+          <span class="game-card__icon">🃏</span>
+          <strong>翻卡遊戲</strong>
+          <span>翻出相同圖案，完成配對。</span>
+        </button>
+        <button class="game-card" type="button" data-open="snake">
+          <span class="game-card__icon">🐍</span>
+          <strong>貪吃蛇</strong>
+          <span>吃食物、變長、別撞牆。</span>
+        </button>
+      </div>
+    </section>
+    <section id="guess-view" class="view panel">
+      <div class="panel__top">
+        <div>
+          <p class="panel__eyebrow">NUMBER GAME</p>
+          <h2>猜數字</h2>
+        </div>
+        <button class="button button--ghost" type="button" data-back>返回選單</button>
+      </div>
+      <div class="stats">
+        <article class="stat-card">
+          <span class="stat-card__label">範圍</span>
+          <strong>1 - 100</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-card__label">次數</span>
+          <strong id="guess-times">0</strong>
+        </article>
+      </div>
+      <div class="play-area">
+        <label class="input-panel" for="guess-input">
+          <span>輸入你的猜測</span>
+          <input id="guess-input" type="number" min="1" max="100" placeholder="例如 42">
+        </label>
+      </div>
+      <div class="action-row">
+        <button id="guess-submit" class="button" type="button">猜看看</button>
+        <button id="guess-restart" class="button button--accent" type="button">重新開始</button>
+      </div>
+      <p id="guess-message" class="message"></p>
+    </section>
+    <section id="rps-view" class="view panel">
+      <div class="panel__top">
+        <div>
+          <p class="panel__eyebrow">RPS GAME</p>
+          <h2>剪刀石頭布</h2>
+        </div>
+        <button class="button button--ghost" type="button" data-back>返回選單</button>
+      </div>
+      <div class="stats">
+        <article class="stat-card">
+          <span class="stat-card__label">勝</span>
+          <strong id="rps-win">0</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-card__label">輸</span>
+          <strong id="rps-lose">0</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-card__label">平</span>
+          <strong id="rps-draw">0</strong>
+        </article>
+      </div>
+      <div class="choice-row">
+        <button class="choice-button" type="button" data-rps="剪刀">✂️<span>剪刀</span></button>
+        <button class="choice-button" type="button" data-rps="石頭">🪨<span>石頭</span></button>
+        <button class="choice-button" type="button" data-rps="布">📄<span>布</span></button>
+      </div>
+      <div class="action-row">
+        <button id="rps-reset" class="button button--accent" type="button">重新開始</button>
+      </div>
+      <p id="rps-message" class="message"></p>
+    </section>
+    <section id="memory-view" class="view panel">
+      <div class="panel__top">
+        <div>
+          <p class="panel__eyebrow">MEMORY GAME</p>
+          <h2>翻卡遊戲</h2>
+        </div>
+        <button class="button button--ghost" type="button" data-back>返回選單</button>
+      </div>
+      <div class="stats">
+        <article class="stat-card">
+          <span class="stat-card__label">翻牌次數</span>
+          <strong id="memory-flips">0</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-card__label">配對完成</span>
+          <strong id="memory-matched">0 / 8</strong>
+        </article>
+      </div>
+      <div id="memory-board" class="memory-board" aria-label="翻卡遊戲版面"></div>
+      <div class="action-row">
+        <button id="memory-restart" class="button button--accent" type="button">重新開始</button>
+      </div>
+      <p id="memory-message" class="message"></p>
+    </section>
+    <section id="snake-view" class="view panel">
+      <div class="panel__top">
+        <div>
+          <p class="panel__eyebrow">CLASSIC SNAKE</p>
+          <h2>貪吃蛇</h2>
+        </div>
+        <button class="button button--ghost" type="button" data-back>返回選單</button>
+      </div>
+      <div class="stats">
+        <article class="stat-card">
+          <span class="stat-card__label">分數</span>
+          <strong id="snake-score">0</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-card__label">狀態</span>
+          <strong id="snake-status">準備中</strong>
+        </article>
+      </div>
+      <div class="play-area">
+        <div id="snake-board" class="snake-board" role="grid" aria-label="貪吃蛇遊戲版面" tabindex="0"></div>
+      </div>
+      <p class="hint">按一下棋盤後可用方向鍵或 WASD 控制，也可以直接點下方按鈕。</p>
+      <div class="action-row">
+        <button id="snake-toggle" class="button" type="button">開始</button>
+        <button id="snake-restart" class="button button--accent" type="button">重新開始</button>
+      </div>
+      <div class="snake-controls" aria-label="貪吃蛇方向控制">
+        <button class="control-button" type="button" data-direction="up">上</button>
+        <div class="snake-controls__row">
+          <button class="control-button" type="button" data-direction="left">左</button>
+          <button class="control-button" type="button" data-direction="down">下</button>
+          <button class="control-button" type="button" data-direction="right">右</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="./hub.js"></script>
 </body>
 </html>
