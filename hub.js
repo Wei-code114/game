@@ -10,6 +10,29 @@ const menuButtons = document.querySelectorAll("[data-open]");
 const backButtons = document.querySelectorAll("[data-back]");
 let activeView = "menu";
 
+const STORAGE_KEY = "mini-game-hub.v1";
+const records = loadRecords();
+
+const resetRecordsButton = document.querySelector("#reset-records");
+
+const nicknameModal = document.querySelector("#nickname-modal");
+const nicknameModalSubtitle = document.querySelector("#nickname-modal-subtitle");
+const nicknameModalInput = document.querySelector("#nickname-modal-input");
+const nicknameModalSave = document.querySelector("#nickname-modal-save");
+const nicknameModalCancel = document.querySelector("#nickname-modal-cancel");
+const nicknameModalCloseTargets = document.querySelectorAll("[data-close-modal]");
+
+const bestGuessValue = document.querySelector("#best-guess");
+const bestGuessName = document.querySelector("#best-guess-name");
+const bestRpsValue = document.querySelector("#best-rps");
+const bestRpsName = document.querySelector("#best-rps-name");
+const bestMemoryValue = document.querySelector("#best-memory");
+const bestMemoryName = document.querySelector("#best-memory-name");
+const bestSnakeValue = document.querySelector("#best-snake");
+const bestSnakeName = document.querySelector("#best-snake-name");
+
+let pendingBestUpdate = null;
+
 const guessInput = document.querySelector("#guess-input");
 const guessTimes = document.querySelector("#guess-times");
 const guessMessage = document.querySelector("#guess-message");
@@ -74,6 +97,7 @@ buildSnakeBoard();
 renderSnake();
 startMemoryGame();
 renderRps();
+hydrateHomeUi();
 
 const snakeTimer = window.setInterval(() => {
   if (!snakeRunning || activeView !== "snake") {
@@ -95,6 +119,33 @@ menuButtons.forEach((button) => {
 
 backButtons.forEach((button) => {
   button.addEventListener("click", () => showView("menu"));
+});
+
+resetRecordsButton.addEventListener("click", () => {
+  records.best = {};
+  saveRecords(records);
+  renderBestRecords();
+});
+
+nicknameModalSave.addEventListener("click", commitPendingBestUpdate);
+nicknameModalCancel.addEventListener("click", closeNicknameModal);
+nicknameModalCloseTargets.forEach((target) => {
+  target.addEventListener("click", closeNicknameModal);
+});
+
+nicknameModalInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    commitPendingBestUpdate();
+  }
+  if (event.key === "Escape") {
+    closeNicknameModal();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !nicknameModal.classList.contains("modal--hidden")) {
+    closeNicknameModal();
+  }
 });
 
 document.querySelector("#guess-submit").addEventListener("click", checkGuess);
@@ -201,6 +252,8 @@ function checkGuess() {
   }
 
   guessMessage.textContent = `答對了，你用了 ${guessCount} 次。`;
+  maybeUpdateBest("guess", guessCount);
+  renderBestRecords();
 }
 
 function restartGuess() {
@@ -226,12 +279,14 @@ function playRps(playerChoice) {
   ) {
     rpsScore.win += 1;
     rpsMessage.textContent = `你贏了，${playerChoice} 打敗 ${cpuChoice}。`;
+    maybeUpdateBest("rps", rpsScore.win);
   } else {
     rpsScore.lose += 1;
     rpsMessage.textContent = `你輸了，${cpuChoice} 克制 ${playerChoice}。`;
   }
 
   renderRps();
+  renderBestRecords();
 }
 
 function resetRps() {
@@ -317,6 +372,8 @@ function flipMemoryCard(cardId) {
 
     if (memoryMatchedCount === memoryCards.length) {
       memoryMessage.textContent = "全部配對完成，恭喜過關。";
+      maybeUpdateBest("memory", memoryFlipCount);
+      renderBestRecords();
     }
 
     renderMemory();
@@ -465,10 +522,130 @@ function renderSnake() {
     snakeStatus.textContent = snakeRunning ? "進行中" : "已暫停";
   }
   snakeToggle.textContent = snakeState.isGameOver ? "再玩一次" : snakeRunning ? "暫停" : "開始";
+
+  if (snakeState.isGameOver) {
+    maybeUpdateBest("snake", snakeState.score);
+    renderBestRecords();
+  }
 }
 
 function isSameCell(a, b) {
   return Boolean(a && b && a.x === b.x && a.y === b.y);
+}
+
+function hydrateHomeUi() {
+  renderBestRecords();
+}
+
+function renderBestRecords() {
+  const bestGuess = records.best?.guess;
+  bestGuessValue.textContent = bestGuess ? `${bestGuess.value} 次` : "-";
+  bestGuessName.textContent = bestGuess?.name || "-";
+
+  const bestRps = records.best?.rps;
+  bestRpsValue.textContent = bestRps ? `${bestRps.value} 勝` : "-";
+  bestRpsName.textContent = bestRps?.name || "-";
+
+  const bestMemory = records.best?.memory;
+  bestMemoryValue.textContent = bestMemory ? `${bestMemory.value} 次` : "-";
+  bestMemoryName.textContent = bestMemory?.name || "-";
+
+  const bestSnake = records.best?.snake;
+  bestSnakeValue.textContent = bestSnake ? `${bestSnake.value} 分` : "-";
+  bestSnakeName.textContent = bestSnake?.name || "-";
+}
+
+function maybeUpdateBest(game, value) {
+  if (!Number.isFinite(value)) {
+    return;
+  }
+
+  if (pendingBestUpdate) {
+    return;
+  }
+
+  records.best ||= {};
+  const current = records.best[game];
+
+  const isLowerBetter = game === "guess" || game === "memory";
+  const isBetter =
+    !current ||
+    (isLowerBetter ? value < current.value : value > current.value);
+
+  if (!isBetter) {
+    return;
+  }
+
+  // Always ask for nickname on a new record; do not write if empty.
+  openNicknameModal({ game, value });
+}
+
+function loadRecords() {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      return { best: {}, lastNickname: "" };
+    }
+    const parsed = JSON.parse(raw);
+    return {
+      best: typeof parsed.best === "object" && parsed.best ? parsed.best : {},
+      lastNickname: typeof parsed.lastNickname === "string" ? parsed.lastNickname : (typeof parsed.nickname === "string" ? parsed.nickname : ""),
+    };
+  } catch {
+    return { best: {}, lastNickname: "" };
+  }
+}
+
+function saveRecords(next) {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // ignore quota / disabled storage
+  }
+}
+
+function openNicknameModal(next) {
+  pendingBestUpdate = next;
+  nicknameModalInput.value = (records.lastNickname || "").trim();
+  nicknameModalSubtitle.textContent = formatBestSubtitle(next);
+  nicknameModal.classList.remove("modal--hidden");
+  window.setTimeout(() => nicknameModalInput.focus(), 0);
+}
+
+function closeNicknameModal() {
+  pendingBestUpdate = null;
+  nicknameModal.classList.add("modal--hidden");
+  nicknameModalInput.value = "";
+}
+
+function commitPendingBestUpdate() {
+  if (!pendingBestUpdate) {
+    return;
+  }
+
+  const name = nicknameModalInput.value.trim();
+  if (!name) {
+    nicknameModalInput.focus();
+    return;
+  }
+
+  records.lastNickname = name;
+  records.best ||= {};
+  records.best[pendingBestUpdate.game] = { name, value: pendingBestUpdate.value };
+  saveRecords(records);
+  closeNicknameModal();
+  renderBestRecords();
+}
+
+function formatBestSubtitle({ game, value }) {
+  const map = {
+    guess: { label: "猜數字", unit: "次", better: "更少次數" },
+    rps: { label: "剪刀石頭布", unit: "勝", better: "更多勝場" },
+    memory: { label: "翻卡", unit: "次", better: "更少翻牌" },
+    snake: { label: "貪吃蛇", unit: "分", better: "更高分數" },
+  };
+  const meta = map[game] || { label: game, unit: "", better: "更好成績" };
+  return `你在「${meta.label}」達成 ${meta.better}：${value}${meta.unit}。輸入暱稱後才會保存為新紀錄。`;
 }
 
 function shuffle(values) {
